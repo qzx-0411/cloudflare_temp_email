@@ -27,12 +27,16 @@ jobs:
           version: 10
           run_install: false
 
-      - name: Deploy Frontend for ${{ github.ref_name }}
+            - name: Deploy Frontend for ${{ github.ref_name }}
         if: ${{ env.FRONTEND_NAME != '' }}
         run: |
           cd frontend/
           echo "${{ secrets.FRONTEND_ENV }}" > .env.prod
           pnpm install --no-frozen-lockfile
+
+          echo "Creating Cloudflare Pages project if it does not exist..."
+          npx wrangler pages project create "$FRONTEND_NAME" --production-branch=production || true
+
           export frontend_branch="${{ secrets.FRONTEND_BRANCH }}"
           if [ -n "$frontend_branch" ]; then
             echo "Deploying branch $frontend_branch"
@@ -46,7 +50,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           FRONTEND_NAME: ${{ secrets.FRONTEND_NAME }}
-
   deploy-telegram-frontend:
     runs-on: ubuntu-latest
     steps:
